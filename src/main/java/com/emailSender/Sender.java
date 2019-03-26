@@ -1,10 +1,7 @@
 package com.emailSender;
 
 import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.json.simple.parser.ParseException;
 
 import java.io.FileNotFoundException;
@@ -24,30 +21,31 @@ public class Sender {
 
     private Message message;
 
-    public Sender(String subject, String body)  {
+    public Sender()  {
         JSONParser jsonParser = new JSONParser();
         String to = null;
         String from = null;
         String username = null;
         String password = null;
         try {
-            FileReader reader = new FileReader("umbrellaConfigs.json");
+            FileReader reader = new FileReader("senderConfigs.json");
             JSONObject configs = (JSONObject)jsonParser.parse(reader);
             to = (String)configs.get("TO");
             from = (String)configs.get("FROM");
             username = (String)configs.get("USERNAME");
             password = (String)configs.get("PASSWORD");
 
+
         }   catch (FileNotFoundException e) {
             e.printStackTrace();
         }   catch (IOException e)   {
             e.printStackTrace();
-        }   catch (ParseException e)    {
+        }   catch (ParseException e) {
             e.printStackTrace();
         }
         Properties props = declareProperties();
         Session session = declareSession(props, username, password);
-        declareMessage(from, to, session, subject, body);
+        declareMessage(from, to, session);
     }
 
     public void sendMessage()    {
@@ -62,7 +60,7 @@ public class Sender {
         return this.message;
     }
 
-    public void setMessage(String subject, String body)  {
+    public void setMessage(String subject, String body) {
         try {
             this.message.setText(body);
             this.message.setSubject(subject);
@@ -90,55 +88,17 @@ public class Sender {
         return session;
     }
 
-    private void declareMessage(String from, String to, Session session, String subject, String body) {
+    private void declareMessage(String from, String to, Session session) {
         try {
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(from));
             message.setRecipients(Message.RecipientType.TO,
                     InternetAddress.parse(to));
-            message.setSubject(subject);
-            message.setText(body);
 
             this.message = message;
         }   catch (MessagingException e)    {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void main(String[] args)  {
-        String to = "7038590021@vtext.com";
-        String from = "bawler.cameron@gmail.com";
-        final String username = "bawler.cameron@gmail.com";
-        final String password = "nofqkokttuqulltj";
-
-        Properties props = new Properties();
-        props.put("mail.smtp.auth","true");
-        props.put("mail.smtp.starttls.enable","true");
-        props.put("mail.smtp.host","smtp.gmail.com");
-        props.put("mail.smtp.port","587");
-
-        Session session = Session.getInstance(props,
-            new javax.mail.Authenticator()  {
-                protected PasswordAuthentication getPasswordAuthentication()    {
-                    return new PasswordAuthentication(username, password);
-                }
-            });
-
-        try {
-            Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(from));
-            message.setRecipients(Message.RecipientType.TO,
-                    InternetAddress.parse(to));
-            message.setSubject("Subject");
-            message.setText("Test");
-            Transport.send(message);
-
-            System.out.println("Done! Message Sent.");
-
-        }   catch (MessagingException e)    {
-            throw new RuntimeException(e);
-        }
-
     }
 
 }

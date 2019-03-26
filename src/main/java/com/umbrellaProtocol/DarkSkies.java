@@ -13,6 +13,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import javax.validation.constraints.Null;
+
 
 public class DarkSkies {
     private String summary;
@@ -52,6 +54,7 @@ public class DarkSkies {
         this.summary = weather_summary;
         this.weather = weather_data;
         this.time = time_array;
+
     }
 
     private HttpURLConnection connectDarkSky(String lon, String lat, String key) {
@@ -79,7 +82,7 @@ public class DarkSkies {
         try {
             JSONParser jsonParser = new JSONParser();
             JSONObject jsonObject = (JSONObject) jsonParser.parse(
-                    new InputStreamReader(conn.getErrorStream(), "UTF-8"));
+                    new InputStreamReader(conn.getInputStream(), "UTF-8"));
 
             hourly = (JSONObject)jsonObject.get("hourly");
         }   catch (UnsupportedEncodingException e)  {
@@ -104,22 +107,31 @@ public class DarkSkies {
 
     private double[][] weather_fields(JSONArray data, String[] fields) {
         double[][] args = new double[data.size()][fields.length];
-
         JSONObject report;
+
+
         for (int i=0; i<data.size(); i++)   {
             report = (JSONObject)data.get(i);
             for (int j=0; j<fields.length; j++) {
-                args[i][j] = (Double)report.get(fields[j]);
+                try {
+                    args[i][j] = (Double) report.get(fields[j]);
+                }   catch (ClassCastException e) {
+                    args[i][j] = 0.0;
+                }   catch (NullPointerException e)  {
+                    e.printStackTrace();
+                }
             }
         }
         return args;
     }
 
     private String[] weather_time(JSONObject o)    {
-        String[] time_array = new String[o.size()];
+        JSONArray data = (JSONArray)o.get("data");
+        String[] time_array = new String[data.size()];
         long time;
-        for (int i=0; i<o.size(); i++)  {
-            time = (Long)o.get("time")*1000;
+        for (int i=0; i<data.size(); i++)  {
+            JSONObject hour_data = (JSONObject)data.get(i);
+            time = (Long)hour_data.get("time")*1000;
             Date date = new Date(time);
             DateFormat format = new SimpleDateFormat("dd/MM/yyyy/ HH:mm:ss");
             format.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
@@ -145,75 +157,4 @@ public class DarkSkies {
         return time;
     }
 
-    /**
-    public static void main(String[] args)  {
-        DarkSkies ds = new DarkSkies();
-        System.exit(0);
-
-        try {                                                           //replace with JSON access
-            URL url = new URL("https://api.darksky.net/forecast/393c3c68c626da225db4e6fd2af2b560/38.8462,-77.3064");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Accept", "application/json");
-
-            if (conn.getResponseCode() != 200)  {
-                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
-            }
-
-            JSONParser jsonParser = new JSONParser();
-            JSONObject jsonObject = (JSONObject)jsonParser.parse(
-                    new InputStreamReader(conn.getInputStream(),"UTF-8"));
-
-            JSONObject hourly = (JSONObject)jsonObject.get("hourly");
-
-            String hourly_summary = hourly.get("summary").toString();
-            System.out.println(hourly_summary);
-
-            JSONArray hourly_data = (JSONArray)hourly.get("data");
-            JSONObject hourly_report;
-
-            for (int i = 0; i <hourly_data.size(); i++) {
-                hourly_report = (JSONObject)hourly_data.get(i);
-
-                double precProb;
-                try {
-                    precProb = (Double)hourly_report.get("precipProbability");
-                }   catch (ClassCastException e) {
-                    precProb = 0.0;
-                }
-
-                long time = (Long)hourly_report.get("time")*1000;
-                Date date = new Date(time);
-                DateFormat format = new SimpleDateFormat("dd/MM/yyyy/ HH:mm:ss");
-                format.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
-                String formatted = format.format(date);
-
-                double temp = (Double)hourly_report.get("temperature");
-
-                System.out.print(formatted);
-                System.out.print(" ");
-                System.out.println(precProb);
-
-                System.out.println(temp);
-            }
-
-
-
-            conn.disconnect();
-
-            FileWriter file = new FileWriter("weatherdata.json");
-            file.write(hourly.toJSONString());
-            file.flush();
-
-        }   catch (MalformedURLException e) {
-            e.printStackTrace();
-        }   catch (IOException e)   {
-            e.printStackTrace();
-        }   catch (ParseException e)    {
-            e.printStackTrace();
-        }
-
-
-    }
-     */
 }
