@@ -23,6 +23,12 @@ public class DarkSkies {
     private String[] time;
 
 
+    public static void main(String args[])  {
+
+    }
+    /**
+     *
+     */
     public DarkSkies()  {
         JSONParser jsonParser = new JSONParser();
         String lon = null;
@@ -57,6 +63,13 @@ public class DarkSkies {
 
     }
 
+    /**
+     *
+     * @param lon
+     * @param lat
+     * @param key
+     * @return
+     */
     private HttpURLConnection connectDarkSky(String lon, String lat, String key) {
         HttpURLConnection conn = null;
         try {
@@ -77,6 +90,12 @@ public class DarkSkies {
         return conn;
     }
 
+
+    /**
+     *
+     * @param conn
+     * @return
+     */
     private JSONObject parseHourly(HttpURLConnection conn)  {
         JSONObject hourly = null;
         try {
@@ -95,16 +114,34 @@ public class DarkSkies {
         return hourly;
     }
 
+
+    /**
+     *
+     * @param o
+     * @return
+     */
     private String weather_summary(JSONObject o) {
         String summary = o.get("summary").toString();
         return summary;
     }
 
+    /**
+     *
+     * @param o
+     * @return
+     */
     private JSONArray weather_data(JSONObject o) {
         JSONArray objData = (JSONArray)o.get("data");
         return objData;
     }
 
+
+    /**
+     *
+     * @param data
+     * @param fields
+     * @return
+     */
     private double[][] weather_fields(JSONArray data, String[] fields) {
         double[][] args = new double[data.size()][fields.length];
         JSONObject report;
@@ -125,6 +162,12 @@ public class DarkSkies {
         return args;
     }
 
+
+    /**
+     *
+     * @param o
+     * @return
+     */
     private String[] weather_time(JSONObject o)    {
         JSONArray data = (JSONArray)o.get("data");
         String[] time_array = new String[data.size()];
@@ -141,18 +184,38 @@ public class DarkSkies {
         return time_array;
     }
 
+
+    /**
+     *
+     * @return
+     */
     public String getSummary() {
         return this.summary;
     }
 
+
+    /**
+     *
+     * @return
+     */
     public String[] getMetrics()    {
         return this.metrics;
     }
 
+
+    /**
+     *
+     * @return
+     */
     public double[][] getWeather()  {
         return weather;
     }
 
+
+    /**
+     *
+     * @return
+     */
     public String[] getTime()   {
         return time;
     }
